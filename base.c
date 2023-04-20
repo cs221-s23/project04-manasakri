@@ -1,5 +1,21 @@
 #include "project04.h"
-#include<math.h>
+#include <math.h>
+
+void print_binary(int number)
+{
+    for (int i = 31; i >= 0; i--) {
+        int k =number >> i;
+        if (k & 1)
+            printf("1");
+        else printf("0");
+    }
+
+}
+
+void print_hex(int number) {
+
+    printf("0x%08X\n", number) ;
+}
 
 int string_to_int(char *string, int base) {
 

@@ -1,3 +1,5 @@
+// parse.c - parsing and parse tree construction
+
 #include "project04.h"
 #include "math.h"
 
@@ -5,6 +7,7 @@ void parse_table_init(struct parse_table_st *parse_table) {
     parse_table->root = NULL;
 }
 
+// Allocate a parse node from the table of parse nodes
 struct parse_node_st * parse_node_new() {
     return calloc(1, sizeof(struct parse_node_st));
 }
@@ -14,8 +17,10 @@ void parse_error(char *err) {
     exit(-1);
 }
 
+// These are names of operators for printing
 char *parse_oper_strings[] = {"PLUS", "MINUS", "MULT", "DIV", "LEFTSHIFT", "RIGHTSHIFT", "TILDE", "AND", "OR", "CARROT"};
 
+// Print the dots which represent tree depth in the output
 void parse_tree_print_indent(int level) {
     level *= 2;
     for (int i = 0; i < level; i++) {
@@ -23,10 +28,12 @@ void parse_tree_print_indent(int level) {
     }
 }
 
+// Traverse the tree recursively to print out the structs
 void parse_tree_print_expr(struct parse_node_st *node, int level) {
     parse_tree_print_indent(level);
     printf("EXPR ");
 
+    // Added  support for oper1
     
     if (node->type == EX_INTVAL) {
         printf("INTVAL %d\n", node->intval.value);
@@ -48,8 +55,10 @@ void parse_tree_print(struct parse_node_st *np) {
 }
 
 
+//eval
 int eval(struct parse_node_st *node) {
 
+    // Added  support for oper1
 
     if (node->type == EX_INTVAL) {
         return node->intval.value;
@@ -67,6 +76,7 @@ int eval(struct parse_node_st *node) {
 
     }
     else if (node->type == EX_OPER2) {
+        //printf("%d",parse_oper_strings[node->oper2.oper] );
 
         if ( node->oper2.oper == OP_PLUS ) {
             int left_sum = eval(node->oper2.left );
@@ -120,6 +130,8 @@ int eval(struct parse_node_st *node) {
     }
 }
 
+// Parse the "program" part of the EBNF
+// A program is composed of an expression followed by EOT
 struct parse_node_st * parse_program(struct scan_table_st *scan_table) {
     struct parse_node_st *root;
 
@@ -132,15 +144,24 @@ struct parse_node_st * parse_program(struct scan_table_st *scan_table) {
     return root;                                       
 }
 
+// Build the tree for expressions
+// Expressions are defined in the EBNF as an operator followed
+// by zero or more operator operand pairs
 struct parse_node_st * parse_expression(struct scan_table_st *scan_table) {
 
     struct scan_token_st *token;
     struct parse_node_st *node1, *node2;
 
     node1 = parse_operand(scan_table);
+
+    /*
+        TODO
+        add cases for other OPER2 operators
+    */
     while (true) {    
         token = scan_table_get(scan_table, 0);
 
+        // MANASA TODO : Can you add opther operators here ...
         if (token->id == TK_PLUS || token->id == TK_MINUS || token->id == TK_MULT || token->id == TK_DIV ||
             token->id == TK_RIGHTSHIFT || token->id == TK_LEFTSHIFT || token->id == TK_TILDE || token->id == TK_AND ||
                 token->id == TK_OR || token->id == TK_CARROT
@@ -162,6 +183,7 @@ struct parse_node_st * parse_expression(struct scan_table_st *scan_table) {
             if ( token->id == TK_OR ) node2->oper2.oper = OP_OR;
             if ( token->id == TK_CARROT ) node2->oper2.oper = OP_CARROT;
 
+            // MANASA TODO : Can you add opther operators here ...
 
             node2->oper2.left = node1;
             node2->oper2.right = parse_operand(scan_table);
@@ -175,9 +197,18 @@ struct parse_node_st * parse_expression(struct scan_table_st *scan_table) {
     return node1;
 }
 
+// Parse operands, which are defined in the EBNF to be 
+// integer literals or unary minus or expressions 
 struct parse_node_st *parse_operand(struct scan_table_st *scan_table) {
     struct scan_token_st *token;
     struct parse_node_st *node;
+
+    /*
+        Added -
+        add case for unary minus e.g. "-1 + 1"
+        add case for operands which are expressions (i.e. begin with '(')
+            (hint: recurse to parse_expression)
+    */
 
     if (scan_table_accept(scan_table, TK_MINUS)) {
 
@@ -195,13 +226,13 @@ struct parse_node_st *parse_operand(struct scan_table_st *scan_table) {
         scan_table->next = scan_table->next + 1 ;
         return node ;
 
-    }
-    else if (scan_table_accept(scan_table, TK_TILDE)) {
+    }else if (scan_table_accept(scan_table, TK_TILDE)) {
 
             node = parse_node_new();
             node->type = EX_OPER1;
             node->oper1.oper = OP_TILDE  ;
 
+            //scan_table->next = scan_table->next + 1 ;
             token = scan_table_get(scan_table, 0);
             if ( token->id == TK_LPAREN) {
                 scan_table->next = scan_table->next + 1 ;
@@ -263,7 +294,7 @@ struct parse_node_st *parse_operand(struct scan_table_st *scan_table) {
         token = scan_table_get(scan_table, -1);
         node = parse_node_new();
         node->type = EX_INTVAL ;
-        node->intval.value = string_to_int(token->name,10);
+        node->intval.value = string_to_int(token->name,2);
 
     }
     else if (scan_table_accept(scan_table, TK_HEXLIT) ){
