@@ -12,19 +12,6 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-/*
-    Scanner EBNF
-
-    tokenlist   = (token)*
-    token       = integer | symbol
-    integer     = digit (digit)*
-    symbol      = '+' | '-' | '*' | '/' | '(' | ')'
-    digit       = '0' | ... | '9'
-
-    Ignore
-
-    whitespace  =  (' ' | '\t') (' ' | '\t')* 
-*/
 
 #define SCAN_TOKEN_LEN 32
 #define SCAN_INPUT_LEN 2048
@@ -76,15 +63,6 @@ void scan_table_print(struct scan_table_st *st);
 struct scan_token_st * scan_table_get(struct scan_table_st *st, int i);
 bool scan_table_accept(struct scan_table_st *st, enum scan_token_enum tk_expected);
 
-/*
-     Parser EBNF
-
-     program    = expression EOT
-     expression = operand (operator operand)*
-     operand    = integer
-                | '-' operand
-                | '(' expression ')'
-*/
 
 enum parse_expr_enum {EX_INTVAL, EX_HEXVAL, EX_OPER1, EX_OPER2};
 enum parse_oper_enum {OP_PLUS, OP_MINUS, OP_MULT, OP_DIV, OP_LEFTSHIFT, OP_RIGHTSHIFT, OP_TILDE, OP_AND, OP_OR, OP_CARROT};
@@ -118,17 +96,12 @@ struct parse_node_st *parse_program(struct scan_table_st *st);
 
 int eval(struct parse_node_st *np);
 
-/* 
- * These prototypes are needed for the mutual recursion between
- * parse_expression() and parse_operand()
- */
 
 struct parse_node_st *parse_expression(struct scan_table_st *st);
 struct parse_node_st *parse_operand(struct scan_table_st *st);
 
-// Prototype for your implementation of string_to_int
 int string_to_int(char *string, int base) ;
 void print_binary(int number);
 void print_hex(int number);
 
-#endif // _LAB06_H
+#endif 
